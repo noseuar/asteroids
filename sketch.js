@@ -36,6 +36,10 @@ function draw() {
     }
   }
 
+  if (asteroids.length < Math.floor(enemies/2)) {
+    asteroids.push(new Asteroid());
+  }
+
   for(k = 0; k < bullets.length; k++) {
     bullets[k].render();
     bullets[k].update();
@@ -144,8 +148,20 @@ function Ship() {
 function Asteroid() {
   this.r = random(15, 30);
   this.total = 8;
-  this.pos = createVector(random(width), random(height));
-  this.dir = createVector(random(3), random(2));
+  let coin = [0, 1];
+  let posW = [0, width];
+  let posH = [0, height];
+  var x, y;
+  if (random(coin)) {
+    x = random(posW);
+    y = random(height);
+  } else {
+    x = random(width);
+    y = random(posW);
+  }
+  this.pos = createVector(x, y);
+  this.dir = p5.Vector.random2D();
+  this.dir.mult(random(1, 3));
   if (Math.random() < 0.50) {
     this.dir.mult(-1);
   }
