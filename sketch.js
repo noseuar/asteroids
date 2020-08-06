@@ -46,35 +46,52 @@ function draw() {
       }
     }
 
-    if (bullets[k].out()) {
+    // if (bullets[k].out()) {
+    //   bullets.splice(k, 1);
+    // }
+    if (bullets[k].removeMe()) {
       bullets.splice(k, 1);
     }
-
   }
-
-}
+};
 
 function Ship() {
   this.pos = createVector(width / 2, height / 2);
-  this.heading = PI/2;
+  this.heading = 0;//PI/2;
   this.dir = 0;
   this.r = 15;
   this.vel = createVector(0, 0);
   this.boost = false;
   this.color = 255;
+  this.renderBoost = 0;
   
   this.render = function(){
     push();
     translate(this.pos.x, this.pos.y);
     rotate(this.heading);
-    noStroke();
     if (this.color < 255){
       this.color++;
     }
     fill(this.color);
     // noFill();
     // stroke(255);
-    triangle(-this.r, this.r, 0, -this.r, this.r, this.r);
+    //            -Y
+    //             |
+    //     -X <---------> X
+    //             |
+    //             Y 
+    beginShape();
+    vertex(-this.r, this.r);
+    vertex(0, -this.r);
+    vertex(this.r, this.r);
+    vertex(0, this.r*0.7);
+    endShape(CLOSE);
+    //triangle(-this.r, this.r, 0, -this.r, this.r, this.r);
+    stroke(this.color);
+    strokeWeight(4);
+    
+    line(0, this.r*0.5, 0, this.r*0.5 + this.renderBoost);
+    this.renderBoost *= 0.9;
     pop();
   }
   
@@ -87,11 +104,11 @@ function Ship() {
     this.checkEdges();
     this.heading += this.dir;
     this.vel.mult(0.99);
-  }
+  };
 
   this.setRotation = function(angle){
     this.dir = angle;
-  }
+  };
 
   this.hits = function(asteroid) {
     var d = dist(this.pos.x, this.pos.y, asteroid.pos.x, asteroid.pos.y);
@@ -105,6 +122,7 @@ function Ship() {
   this.boosting = function() {
     var force = p5.Vector.fromAngle(this.heading - PI/2);
     force.mult(0.1);
+    this.renderBoost = 9;
     this.vel.add(force);
   };
 
@@ -131,6 +149,9 @@ function Asteroid() {
   this.total = 8;
   this.pos = createVector(random(width), random(height));
   this.dir = createVector(random(3), random(2));
+  if (Math.random() < 0.50) {
+    this.dir.mult(-1);
+  }
   this.hit = 0;
   this.remove = 0;
 
@@ -145,7 +166,7 @@ function Asteroid() {
       this.offset[i] = random(-this.r * 0.2, this.r * 0.5);
     }
     this.hit = 2;
-  }
+  };
 
   this.move = function(){
     
@@ -166,12 +187,11 @@ function Asteroid() {
     }
     
     this.pos.add(this.dir);
-    
-  }
+  };
   
   this.removeMe = function(){
     this.remove++;
-  }
+  };
 
   this.render = function() {
     push();
@@ -206,9 +226,20 @@ function Bullet(shipPos, heading) {
   this.pos = createVector(shipPos.x, shipPos.y);
   this.vel = p5.Vector.fromAngle(heading-PI/2); // default len = 1.0
   this.vel.mult(10);
+  this.cntr = Math.floor(width/6);
 
   this.update = function() {
     this.pos.add(this.vel);
+    if (this.pos.x < 0) {
+      this.pos.x = width;
+    } else if (this.pos.x > width) {
+      this.pos.x = 0;
+    } else if (this.pos.y < 0) {
+      this.pos.y = height;
+    } else if (this.pos.y > height) {
+      this.pos.y = 0;
+    }
+    this.cntr--;
   };
 
   this.render = function() {
@@ -237,6 +268,13 @@ function Bullet(shipPos, heading) {
     }
     return false;
   };
+
+  this.removeMe = function() {
+    if (this.cntr <= 0) {
+      return true;
+    }
+    return false;
+  }
 }
 
 function keyPressed() {
